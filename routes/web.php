@@ -29,6 +29,9 @@ Route::get('checkout/success', [CheckoutController::class, 'success'])->name('ch
 Route::get('checkout/{camp:slug}', [CheckoutController::class, 'create'])->name('checkout.create');
 Route::post('checkout/{camp}', [CheckoutController::class, 'store'])->name('checkout.store');
 
+// midtrans route
+Route::get('payment/success', [CheckoutController::class, 'midtransCallback']);
+Route::post('payment/success', [CheckoutController::class, 'midtransCallback']);
 
 // socialite routes
 Route::get('sign-in-google', [UserController::class, 'google'])->name('user.login.google');
