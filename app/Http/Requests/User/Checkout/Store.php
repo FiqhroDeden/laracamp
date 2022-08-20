@@ -24,7 +24,7 @@ class Store extends FormRequest
      */
     public function rules()
     {
-        $expiredValidation = date('Y-m', time());
+        // $expiredValidation = date('Y-m', time());
         return [
             'name'  => 'required|string',
             'email' => 'required|email|unique:users,email,' . Auth::id(),
