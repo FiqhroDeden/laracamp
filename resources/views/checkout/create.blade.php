@@ -65,6 +65,13 @@
                                     <span class="text-danger">{{ $errors->first('address') }}</span>
                                 @endif
                             </div>
+                            <div class="mb-4">
+                                <label  class="form-label">Discount Code</label>
+                                <input name="discount" type="text" class="form-control {{ $errors->has('discount') ? 'is-invalid' : '' }}" value="{{old('discount')}}">
+                                @if($errors->has('discount'))
+                                    <span class="text-danger">{{ $errors->first('discount') }}</span>
+                                @endif
+                            </div>
                             {{-- <div class="mb-4">
                                 <label  class="form-label">Card Number</label>
                                 <input name="card_number" type="number" class="form-control {{ $errors->has('card_number') ? 'is-invalid' : '' }}" value="{{ old('card_number') ?: '' }}" required>

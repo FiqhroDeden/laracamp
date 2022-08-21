@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\User;
 
+use Midtrans;
+use Exception;
 use App\Models\Camp;
 use App\Models\Checkout;
+use App\Models\Discount;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -11,8 +14,6 @@ use App\Mail\Checkout\AfterCheckout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Requests\User\Checkout\Store;
-use Exception;
-use Midtrans;
 
 class CheckoutController extends Controller
 {
@@ -59,7 +60,7 @@ class CheckoutController extends Controller
      */
     public function store(Store $request, Camp $camp)
     {
-
+        // debug
         // return $request->all();
         // mapping request data
         $data = $request->all();
@@ -74,6 +75,13 @@ class CheckoutController extends Controller
         $user->phone = $data['phone'];
         $user->address = $data['address'];
         $user->save();
+
+        // checkout discount
+        if ($request->discount) {
+            $discount = Discount::Where('code', $request->discount)->first();
+            $data['discount_id'] = $discount->id;
+            $data['discount_percentage'] = $discount->percentage;
+        }
 
         // create checkout data
         $checkout = Checkout::create($data);
@@ -153,6 +161,26 @@ class CheckoutController extends Controller
             'name'  => "Payment for {$checkout->Camp->title} Camp"
         ];
 
+        $discountPrice = 0;
+        if($checkout->Discount)
+        {
+            $discountPrice = $price * $checkout->discount_percentage / 100;
+            $items_details[] = [
+                'id'    => $checkout->Discount->code,
+                'price' => -$discountPrice,
+                'quantity' => 1,
+                'name'  => "Discount {$checkout->Discount->name} ({$checkout->discount_percentage}%)"
+            ];
+        }
+
+        $total = $price - $discountPrice;
+
+        $transaction_details = [
+            'order_id' => $orderId,
+            'gross_amount'  => $total,
+        ];
+
+
         $userData = [
             'first_name'    => $checkout->User->name,
             'last_name'     => "",
@@ -182,6 +210,7 @@ class CheckoutController extends Controller
             // Get Snap Payment Page URL
             $paymentUrl = \Midtrans\Snap::createTransaction($midtrans_params)->redirect_url;
             $checkout->midtrans_url = $paymentUrl;
+            $checkout->total = $total;
             $checkout->save();
 
             return $paymentUrl;
